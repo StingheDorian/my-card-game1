@@ -9,6 +9,7 @@ const MainMenu = ({ onNavigate, onWalletConnected }) => {
       {/* Wallet Connection */}
       <WalletConnect onWalletConnected={onWalletConnected} />
 
+      {/* Menu Buttons */}
       <div className="flex flex-col gap-4 mt-6">
         <button
           onClick={() => onNavigate("deckbuilder")}

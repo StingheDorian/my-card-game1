@@ -1,78 +1,100 @@
-// src/components/DeckBuilder.jsx
 import React, { useState } from "react";
+import { allCards } from "../data/heroCards";
+import { userCardCollection } from "../data/userCards";
+import { saveDeck } from "../data/deckStorage";
 
-// Dummy card data — later replace with NFT data from wallet
-const dummyCards = Array.from({ length: 30 }, (_, i) => ({
-  id: i + 1,
-  name: `Card ${i + 1}`,
-  description: "This is a powerful card.",
-  type: i % 2 === 0 ? "Hero" : "Event",
-}));
-
-const DeckBuilder = ({ onBack }) => {
+const DeckBuilder = ({ onBack, onDeckSaved, wallet }) => {
   const [selectedCards, setSelectedCards] = useState([]);
 
-  const toggleCardSelection = (card) => {
-    const isSelected = selectedCards.some((c) => c.id === card.id);
+  const availableCards = userCardCollection.map((id, index) => ({
+    ...allCards[id],
+    uniqueId: `${id}-${index}`,
+  }));
 
-    if (isSelected) {
-      setSelectedCards((prev) => prev.filter((c) => c.id !== card.id));
-    } else if (selectedCards.length < 20) {
-      setSelectedCards((prev) => [...prev, card]);
-    }
+  const handleCardClick = (card) => {
+    if (selectedCards.length >= 20) return;
+    setSelectedCards([...selectedCards, card]);
   };
 
-  const isCardSelected = (card) => selectedCards.some((c) => c.id === card.id);
+  const handleRemoveCard = (index) => {
+    const newDeck = [...selectedCards];
+    newDeck.splice(index, 1);
+    setSelectedCards(newDeck);
+  };
 
-  const saveDeck = () => {
+  const handleSaveDeck = () => {
     if (selectedCards.length !== 20) {
-      alert("You must select exactly 20 cards to save your deck!");
+      alert("Deck must have exactly 20 cards!");
       return;
     }
-    // Placeholder: Save logic goes here (localStorage, backend, etc.)
-    console.log("Deck saved:", selectedCards);
-    alert("✅ Deck saved successfully!");
-    onBack(); // Return to menu
+    saveDeck(selectedCards.map((card) => card.id));
+    alert("Deck saved!");
+    onDeckSaved();
   };
 
   return (
-    <div className="p-4 text-white">
-      <h2 className="text-2xl font-bold mb-4 text-center">🧩 Deck Builder</h2>
-      <p className="text-center mb-2">Select 20 cards to build your deck</p>
-      <p className="text-center text-sm text-gray-400 mb-4">
-        Selected: {selectedCards.length}/20
-      </p>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {dummyCards.map((card) => (
-          <div
-            key={card.id}
-            onClick={() => toggleCardSelection(card)}
-            className={`cursor-pointer border rounded-xl p-4 shadow transition ${
-              isCardSelected(card)
-                ? "bg-blue-600 border-blue-400"
-                : "bg-gray-800 border-gray-700"
-            }`}
-          >
-            <h3 className="text-lg font-semibold">{card.name}</h3>
-            <p className="text-sm text-gray-300">{card.description}</p>
-            <p className="text-xs mt-2 italic text-yellow-400">{card.type}</p>
-          </div>
-        ))}
+    <div className="flex min-h-screen text-white">
+      {/* Left Sidebar */}
+      <div className="w-64 bg-gray-800 p-4">
+        <h2 className="text-xl font-bold mb-4">Player Info</h2>
+        <p className="mb-2">👤 {wallet ? wallet.slice(0, 6) + "..." + wallet.slice(-4) : "Not connected"}</p>
+        <p className="mb-4">🃏 Cards: {userCardCollection.length}</p>
+        <button onClick={onBack} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded w-full mb-2">
+          🔙 Back
+        </button>
+        <button disabled className="bg-gray-700 px-4 py-2 rounded w-full mb-2 opacity-70">
+          📘 My Decks (soon)
+        </button>
+        <button disabled className="bg-gray-700 px-4 py-2 rounded w-full opacity-70">
+          🗂️ Collection (soon)
+        </button>
       </div>
 
-      <div className="flex justify-center gap-4 mt-6">
+      {/* Main Content */}
+      <div className="flex-1 p-4">
+        <h2 className="text-2xl font-bold mb-4">Build Your Deck</h2>
+        <p className="mb-2">Select up to 20 cards</p>
+        <div className="grid grid-cols-3 gap-3">
+          {availableCards.map((card) => (
+            <div
+              key={card.uniqueId}
+              className="bg-gray-700 p-2 rounded hover:scale-105 transform transition cursor-pointer text-center border border-yellow-500"
+              onClick={() => handleCardClick(card)}
+            >
+              <img
+                src={`./cards/${card.id}.png`}
+                alt={card.name}
+                className="w-full h-32 object-contain mb-2"
+              />
+              <p className="font-bold">{card.name}</p>
+              <p className="text-sm">Cost: {card.cost} ETH</p>
+              <p className="text-sm">Damage: {card.damage}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right Preview Panel */}
+      <div className="w-64 bg-gray-800 p-4">
+        <h3 className="text-lg font-semibold mb-2">🧩 Deck Preview ({selectedCards.length}/20)</h3>
+        <div className="space-y-1 max-h-[70vh] overflow-y-auto">
+          {selectedCards.map((card, index) => (
+            <div
+              key={`${card.id}-${index}`}
+              className="flex justify-between bg-gray-700 px-2 py-1 rounded text-sm hover:bg-red-700 cursor-pointer"
+              onClick={() => handleRemoveCard(index)}
+            >
+              <span>{card.name}</span>
+              <span>❌</span>
+            </div>
+          ))}
+        </div>
         <button
-          onClick={saveDeck}
-          className="bg-green-500 hover:bg-green-600 px-6 py-2 rounded font-semibold"
+          onClick={handleSaveDeck}
+          disabled={selectedCards.length !== 20}
+          className="mt-4 bg-green-500 hover:bg-green-600 px-4 py-2 rounded w-full font-bold"
         >
           💾 Save Deck
-        </button>
-        <button
-          onClick={onBack}
-          className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded font-semibold"
-        >
-          🔙 Back to Menu
         </button>
       </div>
     </div>

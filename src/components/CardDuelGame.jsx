@@ -12,11 +12,10 @@ const initialPlayerState = {
 const CardDuelGame = ({ playerDeck, onGameEnd }) => {
   const [player1, setPlayer1] = useState({ ...initialPlayerState });
   const [player2, setPlayer2] = useState({ ...initialPlayerState });
-  const [turn, setTurn] = useState(2); // Player 2 is user
+  const [turn, setTurn] = useState(2);
   const [gameStarted, setGameStarted] = useState(false);
   const [mulliganHand, setMulliganHand] = useState([]);
   const [selectedMulligan, setSelectedMulligan] = useState([]);
-  const [rerolled, setRerolled] = useState(false);
   const [timer, setTimer] = useState(30);
 
   useEffect(() => {
@@ -39,7 +38,6 @@ const CardDuelGame = ({ playerDeck, onGameEnd }) => {
     if (mulliganHand.length && selectedMulligan.length === 3) {
       const finalHand = selectedMulligan;
       setPlayer2((prev) => ({ ...prev, hand: finalHand }));
-      setGameStarted(true);
     }
   }, [selectedMulligan]);
 
@@ -65,21 +63,13 @@ const CardDuelGame = ({ playerDeck, onGameEnd }) => {
     }
   };
 
-  const handleReroll = () => {
-    if (rerolled) return;
-    const rerolledCards = mulliganHand.map((card) =>
-      selectedMulligan.includes(card)
-        ? card
-        : allCards[Object.keys(allCards)[Math.floor(Math.random() * Object.keys(allCards).length)]]
-    );
-    setMulliganHand(rerolledCards);
-    setRerolled(true);
-  };
-
   const handleAutoSelect = () => {
     const autoPick = [...selectedMulligan];
     const remainder = mulliganHand.filter((c) => !autoPick.includes(c)).slice(0, 3 - autoPick.length);
-    setSelectedMulligan([...autoPick, ...remainder]);
+    const finalHand = [...autoPick, ...remainder];
+    setSelectedMulligan(finalHand);
+    setPlayer2((prev) => ({ ...prev, hand: finalHand }));
+    setGameStarted(true);
   };
 
   const handlePlayCard = (index) => {
@@ -128,17 +118,18 @@ const CardDuelGame = ({ playerDeck, onGameEnd }) => {
     <div className="mb-4">
       <h3 className="text-lg font-semibold">{label}</h3>
       <p>❤️ {player.health} USDT | 💠 ETH: {player.eth}</p>
-      <div className="flex gap-2 flex-wrap mt-2">
+      <div className="relative h-24 mt-2 overflow-visible">
         {player.hand.map((card, idx) => (
           <div
             key={`${card.id}-${idx}`}
-            className="bg-gray-800 p-1 rounded text-center w-20 border hover:bg-gray-700 cursor-pointer"
+            className="absolute bg-gray-800 p-1 rounded text-center w-16 border hover:bg-gray-700 cursor-pointer"
+            style={{ left: `${idx * 32}px`, zIndex: idx }}
             onClick={() => (label === "You" && turn === 2 ? handlePlayCard(idx) : null)}
           >
-            <img src={`./cards/${card.id}.png`} alt={card.name} className="w-full h-14 object-contain" />
-            <p className="text-[10px] font-bold truncate">{card.name}</p>
-            <p className="text-[10px]">{card.cost} ETH</p>
-            <p className="text-[10px]">{card.damage} DMG</p>
+            <img src={`./cards/${card.id}.png`} alt={card.name} className="w-full h-10 object-contain" />
+            <p className="text-[7px] font-bold truncate">{card.name}</p>
+            <p className="text-[7px]">{card.cost} ETH</p>
+            <p className="text-[7px]">{card.damage} DMG</p>
           </div>
         ))}
       </div>
@@ -147,43 +138,63 @@ const CardDuelGame = ({ playerDeck, onGameEnd }) => {
 
   if (!gameStarted) {
     return (
-      <div className="p-6 text-white">
+      <div
+        className="p-6 text-white min-h-screen bg-cover bg-center"
+        style={{ backgroundImage: "url(/images/arena.png)" }}
+      >
         <h2 className="text-xl font-bold mb-4">Choose 3 Starting Cards</h2>
         <p className="mb-2">Time left: {timer}s</p>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex justify-center gap-4">
           {mulliganHand.map((card, idx) => (
             <div
               key={idx}
               onClick={() => handleSelectCard(card)}
-              className={`p-2 border-2 rounded text-center w-24 cursor-pointer hover:border-yellow-500 transition-all duration-200 ${
-                selectedMulligan.includes(card) ? "border-blue-500" : "border-gray-600"
+              className={`p-2 border-4 rounded text-center w-20 cursor-pointer transition-all duration-200 ${
+                selectedMulligan.includes(card)
+                  ? "border-yellow-400 shadow-md shadow-yellow-400"
+                  : "border-gray-600 hover:border-yellow-500"
               }`}
             >
-              <img src={`./cards/${card.id}.png`} alt={card.name} className="w-full h-16 object-contain mb-1" />
-              <p className="text-xs font-bold truncate">{card.name}</p>
-              <p className="text-[10px]">{card.cost} ETH</p>
-              <p className="text-[10px]">{card.damage} DMG</p>
+              <img
+                src={`./cards/${card.id}.png`}
+                alt={card.name}
+                className="w-full h-12 object-contain mb-1"
+              />
+              <p className="text-[8px] font-bold truncate">{card.name}</p>
+              <p className="text-[8px]">{card.cost} ETH</p>
+              <p className="text-[8px]">{card.damage} DMG</p>
             </div>
           ))}
         </div>
-        <button
-          disabled={rerolled}
-          onClick={handleReroll}
-          className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded disabled:opacity-50"
-        >
-          ♻️ Reroll Unselected
-        </button>
+        {selectedMulligan.length === 3 && (
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => setGameStarted(true)}
+              className="px-6 py-2 bg-green-500 hover:bg-green-600 rounded text-white font-semibold"
+            >
+              ✅ Ready
+            </button>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="p-4 text-white">
-      <h2 className="text-xl font-bold text-center mb-4">⚔️ Card Duel Game</h2>
-      <p className="text-center mb-6">Current Turn: {turn === 2 ? "You" : "Opponent"}</p>
-      {renderPlayer(player1, "Opponent")}
-      <hr className="my-4" />
-      {renderPlayer(player2, "You")}
+    <div
+      className="p-4 text-white min-h-screen bg-cover bg-center overflow-y-auto"
+      style={{ backgroundImage: "url(/images/arena.png)" }}
+    >
+      <div className="grid grid-rows-2 h-full">
+        <div>
+          <h2 className="text-xl font-bold text-center mb-4">⚔️ Card Duel Game</h2>
+          <p className="text-center mb-6">Current Turn: {turn === 2 ? "You" : "Opponent"}</p>
+          {renderPlayer(player1, "Opponent")}
+        </div>
+        <div className="mt-10">
+          {renderPlayer(player2, "You")}
+        </div>
+      </div>
     </div>
   );
 };

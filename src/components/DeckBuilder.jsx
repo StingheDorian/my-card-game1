@@ -97,7 +97,7 @@ const DeckBuilder = ({ onBack, onDeckSaved, wallet }) => {
       </div>
 
       {/* Main Panel */}
-      <div className="flex-1 p-4 pt-10 max-h-screen overflow-y-auto bg-black bg-opacity-40 border-l border-white">
+      <div className="flex-1 p-4 pt-[25vh] max-h-screen overflow-y-auto bg-black bg-opacity-40 border-l border-white">
         <h2 className="text-2xl font-bold mb-4">
           {viewingSavedDeck ? "🧩 Viewing Saved Deck" : "🧩 Build Your Deck"}
         </h2>

@@ -1,3 +1,4 @@
+import './App.css';
 import React, { useState } from "react";
 import MainMenu from "./components/MainMenu";
 import DeckBuilder from "./components/DeckBuilder";

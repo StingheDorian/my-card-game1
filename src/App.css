@@ -2,3 +2,22 @@
 body {
   font-family: sans-serif;
 }
+
+/* Glowing pulse animation for hovered cards */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 10px #facc15, 0 0 20px #facc15;
+  }
+  50% {
+    box-shadow: 0 0 25px #facc15, 0 0 45px #facc15;
+  }
+  100% {
+    box-shadow: 0 0 10px #facc15, 0 0 20px #facc15;
+  }
+}
+
+.glow {
+  animation: glowPulse 1.5s ease-in-out infinite;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 15px #facc15, 0 0 30px #facc15;
+}
